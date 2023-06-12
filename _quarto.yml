@@ -1,0 +1,48 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "R Views Too"
+  site-url: rviews.posit.co/
+  search: true
+  repo-url: https://github.com/rstudio/rviews-too
+#  issue-url: https://github.com/rstudio/rviews-too/issues
+  repo-actions: [source, issue]
+  open-graph: true
+  twitter-card: true
+  navbar:
+    pinned: true
+    left:
+      - text: "About"
+        href: about.qmd
+      - text: "How to Contribute"
+        href: how-to-contribute.qmd
+      - text: "Contributors"
+        href: contributors.qmd
+      - text: "R Views Archive"
+        href: https://rviews.rstudio.com/
+    right:
+      - icon: twitter
+        href: https://twitter.com/posit_pbc
+        aria-label: Posit Twitter
+      - icon: github
+        href: https://github.com/rstudio/rviews-too
+        aria-label: R Views Too GitHub
+      - icon: rss
+        href: https://rviews.posit.co/index.xml
+        aria-label: R Views Too Blog RSS     
+#  back-to-top-navigation: true
+  page-footer:
+    left: |
+      Proudly supported by
+      [![](https://www.rstudio.com/assets/img/posit-logo-fullcolor-TM.svg){fig-alt="Posit" width=65px}](https://posit.co)
+
+
+format:
+  html:
+    theme: [cosmo, styles.css]
+
+editor: source
+highlight-style: mokokai
+

@@ -1,0 +1,18 @@
+---
+title: "Joseph Rickert"
+subtitle: "Ambassador at Large"
+description: "Joseph is RStudio's 'Ambassador at Large' for all things R, is the chief editor of the R Views blog. He works with the rest of the RStudio team and the R Consortium to promote open source activities, the R language and the R Community. Joseph also represents RStudio on the R Consortium board of directors."
+listing:
+  id: joseph-rickert
+  contents: ../../posts/**/*.qmd
+  include:
+    author: "Joseph Rickert"
+  fields: [date, title, description, categories, image]
+page-layout: full
+---
+
+<hr>
+<br>
+
+:::{#joseph-rickert}
+:::
