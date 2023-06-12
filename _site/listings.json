@@ -1,0 +1,20 @@
+[
+  {
+    "listing": "/index.html",
+    "items": [
+      "/posts/test-post/index.html"
+    ]
+  },
+  {
+    "listing": "/contributors/joseph-rickert/index.html",
+    "items": [
+      "/posts/test-post/index.html"
+    ]
+  },
+  {
+    "listing": "/contributors.html",
+    "items": [
+      "/contributors/joseph-rickert/index.html"
+    ]
+  }
+]

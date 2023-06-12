@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>R Views Too</title>
+<link>rviews.posit.co/index.html</link>
+<atom:link href="rviews.posit.co/index.xml" rel="self" type="application/rss+xml"/>
+<description></description>
+<generator>quarto-1.3.361</generator>
+<lastBuildDate>Mon, 14 Dec 2020 06:00:00 GMT</lastBuildDate>
+<item>
+  <title>Plotting Surfaces with R</title>
+  <dc:creator>Joseph Rickert</dc:creator>
+  <link>rviews.posit.co/posts/test-post/index.html</link>
+  <description><![CDATA[ 
+
+
+
+
+<p>In this post, I’d like to review some basic options for plotting three dimensional surfaces in R. In addition to producing some eye catching visualizations, plotting surfaces can also help develop one’s geometric intuition for the mathematics describing the surfaces.</p>
+<p>The first plot below shows a <a href="https://en.wikipedia.org/wiki/Helicoid">Helicoid</a> surface which is the path a propeller moving at uniform speed along the z-axis would sweep out. You might be familiar with this shape from working with a hand turned steel auger or a <a href="https://www.tandfonline.com/doi/pdf/10.1080/00046973.1973.9648356">helocoid anemometer</a>. The surface is built up from first principles as follows: we consider two open intervals U = {u: <img src="https://latex.codecogs.com/png.latex?%5C(%5C)"> (0 , 2<img src="https://latex.codecogs.com/png.latex?%5C(%5C)">)} and V = {v: <img src="https://latex.codecogs.com/png.latex?%5C(%5C)"> (0 , <img src="https://latex.codecogs.com/png.latex?%5C(%5C)">)}, lay down a mesh or grid over the two dimensional open set U x V, compute the parametric representation of the surface in <img src="https://latex.codecogs.com/png.latex?R%5E%7B3%7D">, and use the <code>surf3D()</code> function from the <a href="https://cran.r-project.org/package=plot3D">plot3D</a> package to render the surface.</p>
+<pre><code>library(plot3D)
+M &lt;- mesh(seq(0, 6*pi, length.out = 50),seq(pi/3, pi, length.out = 50))
+u &lt;- M$x ; v &lt;- M$y
+x &lt;- v * cos(u)
+y &lt;- v * sin(u)
+z &lt;- 10 * u
+surf3D(x, y, z, colvar = z, colkey = TRUE, 
+       box = TRUE, bty = "b", phi = 20, theta = 120)</code></pre>
+<p><img src="rviews.posit.co/posts/test-post/index_files/figure-html/unnamed-chunk-1-1.png" width="672"> The next code block uses the same approach and functions to render half of a torus.</p>
+<pre><code>R &lt;- 3; r &lt;- 2
+M &lt;- mesh(seq(0, 2*pi,length.out=50), seq(0, pi,length.out=50))
+
+alpha &lt;- M$x; beta &lt;- M$y
+
+x &lt;- (R + r*cos(alpha)) * cos(beta)
+y &lt;- (R + r*cos(alpha)) * sin(beta)
+z &lt;-  r * sin(alpha)
+
+surf3D(x = x, y = y, z = z, colkey=TRUE, bty="b2",
+       phi = 40, theta = 30, main="Half of a Torus")</code></pre>
+<p><img src="rviews.posit.co/posts/test-post/index_files/figure-html/unnamed-chunk-2-1.png" width="672"></p>
+<p>You might test your intuition about the how changing the ratio of R and r alters the look of the torus.</p>
+<p>I think <code>surf3D()</code>, which is built on base R graphics, produces high quality visualizations. I really like the crisp, metallic look of the torus. However, although <code>surf3D()</code> allows you to set the viewing angle, it is limited to producing static plots. A first remedy for this might be to consider the <code>plot3d()</code> function in the <a href="https://cran.r-project.org/package=rgl">rgl package</a> which contains functions built on base graphics and the <a href="https://www.opengl.org/">OpenGL</a> standard for high performance graphics. You can use the same code as above, but just swap out <code>surf3D()</code> and replace it with <code>plot3d()</code>.</p>
+<p>Here is a wireframe version of the half torus that you can rotate with your mouse.</p>
+<pre><code>library(rgl)
+
+torus &lt;- plot3d(x, y, z, type = "l", col = "blue",
+          cex = .3, pch = 1, main = "Half Torus", pch = 20)
+rglwidget(elementId = "plot3drgl")</code></pre>
+<p>These days, of course, <a href="https://www.javascript.com/">JaveScript</a> has become the preferred rendering engine for interactive plots, and there are several possibilities for creating interactive, JavaScript plots in R including <a href="https://cran.r-project.org/package=threejs">threejs</a>, <a href="https://cran.r-project.org/package=plotly">plotly</a>, and <a href="https://cran.r-project.org/package=graph3d">graph3D</a>. Here we show an arresting rendering of two surfaces from the <a href="https://bwlewis.github.io/rthreejs/">threejs gallery</a> that is built up from the parametric equations.</p>
+<pre><code>library("threejs")
+
+N     = 20000
+theta = runif(N)*2*pi
+phi   = runif(N)*2*pi
+R     = 1.5
+r     = 1.0
+
+x = (R + r*cos(theta))*cos(phi)
+y = (R + r*cos(theta))*sin(phi)
+z = r*sin(theta)
+
+d = 6
+h = 6
+t = 2*runif(N) - 1
+w = t^2*sqrt(1-t^2)
+x1 = d*cos(theta)*sin(phi)*w
+y1 = d*sin(theta)*sin(phi)*w
+
+i = order(phi)
+j = order(t)
+col = c(rainbow(length(phi))[order(i)],
+        rainbow(length(t), start=0, end=2/6)[order(j)])
+
+M = cbind(x=c(x, x1), y=c(y, y1), z=c(z, h*t))
+scatterplot3js(M, size=0.1, color=col, bg="black", pch=".")</code></pre>
+<section id="probability-distributions" class="level3">
+<h3 class="anchored" data-anchor-id="probability-distributions">Probability Distributions</h3>
+<p>3D plots are also useful for visualizing probability distributions. For a first look at this, we return to base R graphics and the <a href="https://cran.r-project.org/package=bivariate">bivariate</a> package. This plot from the package vignette shows a mixture of two bivariate normal distributions X and Y where X ~ N(<img src="https://latex.codecogs.com/png.latex?,">) with</p>
+<img src="https://latex.codecogs.com/png.latex?=%0A%5C%5B%5Cbegin%7Bpmatrix%7D3.5%5C%5C%5C0%5Cend%7Bpmatrix%7D%5C%5D%0A"> , <img src="https://latex.codecogs.com/png.latex?=%0A%5C%5B%5Cbegin%7Bpmatrix%7D1%20&amp;%200%5C%5C%5C0%20&amp;%0A1%5Cend%7Bpmatrix%7D%5C%5D%0A"> and Y ~ N(<img src="https://latex.codecogs.com/png.latex?,">) with <img src="https://latex.codecogs.com/png.latex?=%0A%5C%5B%5Cbegin%7Bpmatrix%7D6.5%5C%5C%5C0%5Cend%7Bpmatrix%7D%5C%5D%0A"> , <img src="https://latex.codecogs.com/png.latex?=%0A%5C%5B%5Cbegin%7Bpmatrix%7D1%20&amp;%200%5C%5C%5C0%20&amp;%0A1%5Cend%7Bpmatrix%7D%5C%5D%0A%5C)%0Alibrary(bivariate)%0A%0A%20f%20%3C-%20bmbvpdf%20(3.5,%200,%201,%201,%20#first%20component%20distribution%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%206.5,%200,%201,%201)%20#second%20component%20distribution%0A%0Aplot%20(f,%20axes%20=%20c%20(TRUE,%20FALSE),%20xat%20=%20c%20(3.5,%206.5)%20)%0A%0ABoth%20plotlyand%20threejs%20can%20also%20render%20interactive%20distribution%20plots.%20Here%20is%20a%20plotly%20two-dimensional%20kernel%20density%20plot.%0Alibrary(plotly)%0Akd%20%3C-%20with(MASS::geyser,%20MASS::kde2d(duration,%20waiting,%20n%20=%2050))%0Afig%20%3C-%20plot_ly(x%20=%20kd$x,%20y%20=%20kd$y,%20z%20=%20kd$z)%20%25%3E%25%20add_surface()%0A%0Afig%0AWe%20finish%20with%20a%20threejs%20plot%20of%20the%20bivariate%20normal%20distribution%20with%20%5C(=%0A%5C%5B%5Cbegin%7Bpmatrix%7D0%5C%5C%5C0%5Cend%7Bpmatrix%7D%5C%5D%0A%5C)%20,%20%5C(=%0A%5C%5B%5Cbegin%7Bpmatrix%7D1%20&amp;%20.5%5C%5C%5C%5C.5%20&amp;%0A1%5Cend%7Bpmatrix%7D%5C%5D%0A%5C).%20Here%20we%20use%20dmvnorm()function%20from%20the%20mvtnorm%20package.%0Alibrary(mvtnorm)%0A%0Au%20%3C-%20seq(-5,%205,%20by%20=%20.1)%0Av%20%3C-%20seq(-5,%205,%20by%20=%20.1)%0AM%20%3C-%20expand.grid(u,v)%0A%0Ax%20%3C-%20M$Var1%0Ay%20%3C-%20M$Var2%0Asigma%20%3C-%20matrix(c(1,%20.5,%20.5,%201),%20nrow%20=%202,%20byrow%20=%20TRUE)%0Az%20%3C-%20dmvnorm(x%20=%20M,%20sigma%20=%20sigma)%0A%0Ascatterplot3js(x,%20y,%20z,%20phi%20=%2040,%20theta%20=%2020,%0A%20%20%20%20%20%20%20%20%20%20color=rainbow(length(z)),%0A%20%20%20%20%20%20%20%20%20%20colkey%20=%20FALSE,%0A%20%20%20%20%20%20%20%20%20%20cex%20=%20.3,%0A%20%20%20%20%20%20%20%20%20%20main%20=%20%22Bivariate%20Normal%22)%0AI%20have%20shown%20several%20plots,%20but%20forgive%20me%20if%20I%20have%20barely%20%E2%80%9Cscratched%20the%20surface%E2%80%9D%20of%20possibilities.%20Not%20only%20can%20you%20render%20more%20elaborate%20plots%20of%20two-dimensional%20surfaces%20floating%20in%20three-dimensional%20space,%20and%20more%20complex%20probability%20distributions,%20but%20there%20are%20many%20other%20kinds%20of%20interesting%20surfaces%20to%20plot.%20For%20some%20examples,%20have%20a%20look%20at%20the%20Ocean%20View%20Gallery%20referenced%20in%20the%20plot3D%20vignette.%0AIf%20you%20have%20been%20working%20on%20interesting%20visualizations%20and%20want%20to%20show%20them%20off%20here%20at%20R%20Views,%20we%20would%20love%20to%20have%20them.%20Send%20an%20.Rmd%20file%20with%20your%20code%20and%20a%20few%20words%20describing%20what%20you%20have%20done%20to%20joseph.rickert%20at%20RStudio.com%20and%20we%20will%20see%20if%20we%20can%20publish%20it.%0A"></section>
+
+ ]]></description>
+  <category>R Language</category>
+  <category>R Packages</category>
+  <guid>rviews.posit.co/posts/test-post/index.html</guid>
+  <pubDate>Mon, 14 Dec 2020 06:00:00 GMT</pubDate>
+</item>
+</channel>
+</rss>

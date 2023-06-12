@@ -1,0 +1,65 @@
+[
+  {
+    "objectID": "posts/test-post/index.html",
+    "href": "posts/test-post/index.html",
+    "title": "Plotting Surfaces with R",
+    "section": "",
+    "text": "In this post, I’d like to review some basic options for plotting three dimensional surfaces in R. In addition to producing some eye catching visualizations, plotting surfaces can also help develop one’s geometric intuition for the mathematics describing the surfaces.\nThe first plot below shows a Helicoid surface which is the path a propeller moving at uniform speed along the z-axis would sweep out. You might be familiar with this shape from working with a hand turned steel auger or a helocoid anemometer. The surface is built up from first principles as follows: we consider two open intervals U = {u: \\(\\) (0 , 2\\(\\))} and V = {v: \\(\\) (0 , \\(\\))}, lay down a mesh or grid over the two dimensional open set U x V, compute the parametric representation of the surface in \\(R^{3}\\), and use the surf3D() function from the plot3D package to render the surface.\nlibrary(plot3D)\nM &lt;- mesh(seq(0, 6*pi, length.out = 50),seq(pi/3, pi, length.out = 50))\nu &lt;- M$x ; v &lt;- M$y\nx &lt;- v * cos(u)\ny &lt;- v * sin(u)\nz &lt;- 10 * u\nsurf3D(x, y, z, colvar = z, colkey = TRUE, \n       box = TRUE, bty = \"b\", phi = 20, theta = 120)\n The next code block uses the same approach and functions to render half of a torus.\nR &lt;- 3; r &lt;- 2\nM &lt;- mesh(seq(0, 2*pi,length.out=50), seq(0, pi,length.out=50))\n\nalpha &lt;- M$x; beta &lt;- M$y\n\nx &lt;- (R + r*cos(alpha)) * cos(beta)\ny &lt;- (R + r*cos(alpha)) * sin(beta)\nz &lt;-  r * sin(alpha)\n\nsurf3D(x = x, y = y, z = z, colkey=TRUE, bty=\"b2\",\n       phi = 40, theta = 30, main=\"Half of a Torus\")\n\nYou might test your intuition about the how changing the ratio of R and r alters the look of the torus.\nI think surf3D(), which is built on base R graphics, produces high quality visualizations. I really like the crisp, metallic look of the torus. However, although surf3D() allows you to set the viewing angle, it is limited to producing static plots. A first remedy for this might be to consider the plot3d() function in the rgl package which contains functions built on base graphics and the OpenGL standard for high performance graphics. You can use the same code as above, but just swap out surf3D() and replace it with plot3d().\nHere is a wireframe version of the half torus that you can rotate with your mouse.\nlibrary(rgl)\n\ntorus &lt;- plot3d(x, y, z, type = \"l\", col = \"blue\",\n          cex = .3, pch = 1, main = \"Half Torus\", pch = 20)\nrglwidget(elementId = \"plot3drgl\")\nThese days, of course, JaveScript has become the preferred rendering engine for interactive plots, and there are several possibilities for creating interactive, JavaScript plots in R including threejs, plotly, and graph3D. Here we show an arresting rendering of two surfaces from the threejs gallery that is built up from the parametric equations.\nlibrary(\"threejs\")\n\nN     = 20000\ntheta = runif(N)*2*pi\nphi   = runif(N)*2*pi\nR     = 1.5\nr     = 1.0\n\nx = (R + r*cos(theta))*cos(phi)\ny = (R + r*cos(theta))*sin(phi)\nz = r*sin(theta)\n\nd = 6\nh = 6\nt = 2*runif(N) - 1\nw = t^2*sqrt(1-t^2)\nx1 = d*cos(theta)*sin(phi)*w\ny1 = d*sin(theta)*sin(phi)*w\n\ni = order(phi)\nj = order(t)\ncol = c(rainbow(length(phi))[order(i)],\n        rainbow(length(t), start=0, end=2/6)[order(j)])\n\nM = cbind(x=c(x, x1), y=c(y, y1), z=c(z, h*t))\nscatterplot3js(M, size=0.1, color=col, bg=\"black\", pch=\".\")\n\nProbability Distributions\n3D plots are also useful for visualizing probability distributions. For a first look at this, we return to base R graphics and the bivariate package. This plot from the package vignette shows a mixture of two bivariate normal distributions X and Y where X ~ N(\\(,\\)) with\n\\(=\n\\[\\begin{pmatrix}3.5\\\\\\0\\end{pmatrix}\\]\n\\) , \\(=\n\\[\\begin{pmatrix}1 & 0\\\\\\0 &\n1\\end{pmatrix}\\]\n\\) and Y ~ N(\\(,\\)) with \\(=\n\\[\\begin{pmatrix}6.5\\\\\\0\\end{pmatrix}\\]\n\\) , \\(=\n\\[\\begin{pmatrix}1 & 0\\\\\\0 &\n1\\end{pmatrix}\\]\n\\)\nlibrary(bivariate)\n\n f &lt;- bmbvpdf (3.5, 0, 1, 1, #first component distribution\n               6.5, 0, 1, 1) #second component distribution\n\nplot (f, axes = c (TRUE, FALSE), xat = c (3.5, 6.5) )\n\nBoth plotlyand threejs can also render interactive distribution plots. Here is a plotly two-dimensional kernel density plot.\nlibrary(plotly)\nkd &lt;- with(MASS::geyser, MASS::kde2d(duration, waiting, n = 50))\nfig &lt;- plot_ly(x = kd$x, y = kd$y, z = kd$z) %&gt;% add_surface()\n\nfig\nWe finish with a threejs plot of the bivariate normal distribution with \\(=\n\\[\\begin{pmatrix}0\\\\\\0\\end{pmatrix}\\]\n\\) , \\(=\n\\[\\begin{pmatrix}1 & .5\\\\\\\\.5 &\n1\\end{pmatrix}\\]\n\\). Here we use dmvnorm()function from the mvtnorm package.\nlibrary(mvtnorm)\n\nu &lt;- seq(-5, 5, by = .1)\nv &lt;- seq(-5, 5, by = .1)\nM &lt;- expand.grid(u,v)\n\nx &lt;- M$Var1\ny &lt;- M$Var2\nsigma &lt;- matrix(c(1, .5, .5, 1), nrow = 2, byrow = TRUE)\nz &lt;- dmvnorm(x = M, sigma = sigma)\n\nscatterplot3js(x, y, z, phi = 40, theta = 20,\n          color=rainbow(length(z)),\n          colkey = FALSE,\n          cex = .3,\n          main = \"Bivariate Normal\")\nI have shown several plots, but forgive me if I have barely “scratched the surface” of possibilities. Not only can you render more elaborate plots of two-dimensional surfaces floating in three-dimensional space, and more complex probability distributions, but there are many other kinds of interesting surfaces to plot. For some examples, have a look at the Ocean View Gallery referenced in the plot3D vignette.\nIf you have been working on interesting visualizations and want to show them off here at R Views, we would love to have them. Send an .Rmd file with your code and a few words describing what you have done to joseph.rickert at RStudio.com and we will see if we can publish it."
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "R Views Too",
+    "section": "",
+    "text": "Plotting Surfaces with R\n\n\n\n\n\n\n\nR Language\n\n\nR Packages\n\n\n\n\nThis post takes a look at some basic R tools for producing eye catching three dimensional plots of surfaces and probability distributions. It showcases some interactive JavaScript enabled interactive plots along with classsic visualizations built on base R graphics.\n\n\n\n\n\n\nDec 14, 2020\n\n\nJoseph Rickert\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "contributors/joseph-rickert/index.html",
+    "href": "contributors/joseph-rickert/index.html",
+    "title": "Joseph Rickert",
+    "section": "",
+    "text": "Plotting Surfaces with R\n\n\n\n\n\n\n\nR Language\n\n\nR Packages\n\n\n\n\nThis post takes a look at some basic R tools for producing eye catching three dimensional plots of surfaces and probability distributions. It showcases some interactive JavaScript enabled interactive plots along with classsic visualizations built on base R graphics.\n\n\n\n\n\n\nDec 14, 2020\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About R Views Too",
+    "section": "",
+    "text": "Welcome to R Views Too, the upgraded and enhanced version of R Views.\nR Views Too is the Posit blog devoted to the R Community and the R Language. We imagine it as a place to read considered opinions about topics of interest to the R Community, get some idea of what is happening at conferences and user group meetings around the world, learn about new R packages, see R used to explore various areas of statistics or data science, and discover how Posit tools can contribute to enhancing your R experience.\nR Views Too is powered by Quarto. We moved to this new platform to provide an enhanced experience for our readers. With Quarto’s advanced features, we can better showcase R-related topics and deliver high-quality content.\nThe blog is edited by Joseph Rickert and Isabella Velásquez, who curate the content and ensure its quality. In addition to posts written by the Posit team, we hope that R Views Too will continue to attract other voices from around the R Community. If you have something to say on an R-related topic, news, commentary, or an example of using R that you would like to share with the R Community, please review the How to page and email your ideas to rviewstoo@posit.co.\nR Views Too is a new beginning built around a Quarto, a publishing platform that we expect will prove to be a great benefit to scientific and technical publishing in general. Although R Views Too will launch with all new posts, we expect that a good number, if not all R Views posts, will be eventually ported over to R Views Too. In the meantime, your favorite posts will continue to be available at https://rviews.rstudio.com/.\nNote that R Views Too is not the place to look for news or information on Posit products or events. The widely syndicated blog at posit.co will remain the place for Posit open source and commercial product announcements, company events, and company news.\nWe welcome comments from all readers and encourage discussion on Posit Community. However, comments will not be moderated. Please be courteous and civil."
+  },
+  {
+    "objectID": "how-to-contribute.html",
+    "href": "how-to-contribute.html",
+    "title": "How to Contribute",
+    "section": "",
+    "text": "We hope R Views Too will attract other voices from around the R Community, including yourself! We’re always looking for high-quality, original work to demonstrate the power of R. If you would like to contribute R-related topics, news, commentary, or examples, please follow this process to enter a post for consideration."
+  },
+  {
+    "objectID": "how-to-contribute.html#faqs",
+    "href": "how-to-contribute.html#faqs",
+    "title": "How to Contribute",
+    "section": "FAQs",
+    "text": "FAQs\n\nCan I cross-post my blog post?\n\nYes, you can cross-post your blog post as long as it is published at the same time as the one on R Views Too.\n\nDo you edit posts from the past?\n\nOnce published, we only edit posts from the past for typos or broken links."
+  },
+  {
+    "objectID": "how-to-contribute.html#code-of-conduct",
+    "href": "how-to-contribute.html#code-of-conduct",
+    "title": "How to Contribute",
+    "section": "Code of Conduct",
+    "text": "Code of Conduct\nThe R Views Too project is released with a Contributor Code of Conduct. By contributing to this project, you agree to abide by its terms."
+  },
+  {
+    "objectID": "how-to-contribute.html#license",
+    "href": "how-to-contribute.html#license",
+    "title": "How to Contribute",
+    "section": "License",
+    "text": "License\nUnless otherwise noted, content on R Views Too is licensed under the CC-BY license."
+  },
+  {
+    "objectID": "contributors.html",
+    "href": "contributors.html",
+    "title": "Contributors",
+    "section": "",
+    "text": "Joseph Rickert\n\n\nAmbassador at Large\n\n\nJoseph is RStudio’s ‘Ambassador at Large’ for all things R, is the chief editor of the R Views blog. He works with the rest of the RStudio team and the R Consortium to promote open source activities, the R language and the R Community. Joseph also represents RStudio on the R Consortium board of directors.\n\n\n\n\n \n\n\n\n\nNo matching items"
+  }
+]
